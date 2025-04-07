@@ -8,6 +8,10 @@
     "lint": "eslint . --max-warnings 0"
   },
   "dependencies": {
+    "@headlessui/react": "^2.2.1",
+    "@tailwindcss/postcss": "^4.1.3",
+    "@tailwindcss/vite": "^4.1.3",
+    "@tryghost/content-api": "^1.11.21",
     "@vitejs/plugin-react": "^4.0.4",
     "compression": "^1.7.4",
     "cross-env": "^7.0.3",
@@ -16,12 +20,14 @@
     "eslint-plugin-react-hooks": "^4.6.0",
     "eslint-plugin-react-refresh": "^0.4.3",
     "express": "^4.18.2",
+    "postcss": "^8.5.3",
     "prop-types": "15.8.1",
     "react": "^18.2.0",
     "react-dom": "^18.2.0",
     "sirv": "^2.0.3",
-    "vite": "^4.4.9",
-    "vite-plugin-ssr": "^0.4.142"
+    "tailwindcss": "^4.1.3",
+    "vite": "^6.2.5",
+    "vite-plugin-ssr": "^0.4.85"
   },
   "type": "module"
 }

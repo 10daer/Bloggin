@@ -11,64 +11,101 @@
 //  - HatTip (https://github.com/hattipjs/hattip)
 //    - You can use Bati (https://batijs.github.io/) to scaffold a vite-plugin-ssr + HatTip app. Note that Bati generates apps that use the V1 design (https://vite-plugin-ssr.com/migration/v1-design) and Vike packages (https://vite-plugin-ssr.com/vike-packages)
 
-import express from 'express'
-import compression from 'compression'
-import { renderPage } from 'vite-plugin-ssr/server'
-import { root } from './root.js'
-const isProduction = process.env.NODE_ENV === 'production'
+// server.js - Unified Express Server with vite-plugin-ssr and ProductMatcher logic
 
-startServer()
+import compression from "compression";
+import dotenv from "dotenv";
+import express from "express";
+import { renderPage } from "vite-plugin-ssr";
+import { root } from "./root.js";
+dotenv.config();
 
-async function startServer() {
-  const app = express()
+import { ProductMatcher } from "./ProductMatcher.js";
+import StorisConnection from "./config/database.js";
+import StorisProductService from "./services/StorisProductService.js";
 
-  app.use(compression())
+const isProduction = process.env.NODE_ENV === "production";
+const app = express();
+const port = process.env.PORT || 3000;
 
-  // Vite integration
+// Initialize services
+const storisConnection = new StorisConnection();
+const productService = new StorisProductService(storisConnection);
+const productMatcher = new ProductMatcher();
+
+// Middleware
+app.use(compression());
+app.use(express.json());
+
+// Static files or Vite Dev Middleware
+(async () => {
   if (isProduction) {
-    // In production, we need to serve our static assets ourselves.
-    // (In dev, Vite's middleware serves our static assets.)
-    const sirv = (await import('sirv')).default
-    app.use(sirv(`${root}/dist/client`))
+    const sirv = (await import("sirv")).default;
+    app.use(sirv(`${root}/dist/client`));
   } else {
-    // We instantiate Vite's development server and integrate its middleware to our server.
-    // ⚠️ We instantiate it only in development. (It isn't needed in production and it
-    // would unnecessarily bloat our production server.)
-    const vite = await import('vite')
+    const vite = await import("vite");
     const viteDevMiddleware = (
       await vite.createServer({
         root,
-        server: { middlewareMode: true }
+        server: { middlewareMode: true },
       })
-    ).middlewares
-    app.use(viteDevMiddleware)
+    ).middlewares;
+    app.use(viteDevMiddleware);
   }
 
-  // ...
-  // Other middlewares (e.g. some RPC middleware such as Telefunc)
-  // ...
-
-  // Vite-plugin-ssr middleware. It should always be our last middleware (because it's a
-  // catch-all middleware superseding any middleware placed after it).
-  app.get('*', async (req, res, next) => {
-    const pageContextInit = {
-      urlOriginal: req.originalUrl
+  // Sync products from STORIS
+  async function syncProducts() {
+    try {
+      await storisConnection.connect();
+      const products = await productService.fetchProducts();
+      productMatcher.products = [];
+      products.forEach((product) => productMatcher.addProduct(product));
+      console.log(`Synced ${products.length} products from STORIS`);
+    } catch (error) {
+      console.error("Sync error:", error);
     }
-    const pageContext = await renderPage(pageContextInit)
-    const { httpResponse } = pageContext
-    if (!httpResponse) {
-      return next()
-    } else {
-      const { body, statusCode, headers, earlyHints } = httpResponse
-      if (res.writeEarlyHints) res.writeEarlyHints({ link: earlyHints.map((e) => e.earlyHintLink) })
-      headers.forEach(([name, value]) => res.setHeader(name, value))
-      res.status(statusCode)
-      // For HTTP streams use httpResponse.pipe() instead, see https://vite-plugin-ssr.com/stream
-      res.send(body)
-    }
-  })
+  }
 
-  const port = process.env.PORT || 3000
-  app.listen(port)
-  console.log(`Server running at http://localhost:${port}`)
-}
+  // API Routes
+  app.get("/api/products", async (req, res) => {
+    try {
+      const products = await productService.fetchProducts();
+      res.json(products);
+    } catch (error) {
+      res.status(500).json({ error: error.message });
+    }
+  });
+
+  app.get("/api/matches/:productId", (req, res) => {
+    const product = productMatcher.products.find(
+      (p) => p.id === req.params.productId
+    );
+    if (!product) return res.status(404).json({ error: "Product not found" });
+
+    const matches = productMatcher.findCompatibleProducts(product);
+    res.json(matches);
+  });
+
+  // Product sync every hour
+  setInterval(syncProducts, 3600000);
+  await syncProducts();
+
+  // vite-plugin-ssr catch-all route
+  app.get("*", async (req, res, next) => {
+    const pageContextInit = { urlOriginal: req.originalUrl };
+    const pageContext = await renderPage(pageContextInit);
+    const { httpResponse } = pageContext;
+    if (!httpResponse) return next();
+
+    const { body, statusCode, headers, earlyHints } = httpResponse;
+    if (res.writeEarlyHints)
+      res.writeEarlyHints({ link: earlyHints.map((e) => e.earlyHintLink) });
+    if (headers) headers.forEach(([name, value]) => res.setHeader(name, value));
+
+    res.status(statusCode).send(body);
+  });
+
+  app.listen(port, () => {
+    console.log(`Server running at http://localhost:${port}`);
+  });
+})();
