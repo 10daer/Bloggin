@@ -17,11 +17,6 @@ h5,
 h6 {
   @apply font-semibold tracking-tight;
 }
-
-body {
-  margin: 0;
-  font-family: sans-serif;
-}
 * {
   box-sizing: border-box;
 }

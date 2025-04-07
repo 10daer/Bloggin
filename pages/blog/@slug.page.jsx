@@ -1,5 +1,3 @@
-// src/pages/Post.jsx
-import { fetchGhostData } from "../../lib/ghost";
 import { formatDate } from "../../lib/utils";
 
 function Post({ post }) {
@@ -84,20 +82,6 @@ function Post({ post }) {
       )}
     </article>
   );
-}
-
-export async function fetchData({ slug }) {
-  const { posts } = await fetchGhostData("posts", {
-    slug,
-    include: "authors,tags",
-  });
-
-  return { post: posts?.[0] || null };
-}
-
-export function onBeforeRender({ routeParams }) {
-  // This function is used to determine metadata before render
-  return fetchData(routeParams);
 }
 
 export default {

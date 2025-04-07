@@ -123,8 +123,7 @@ function Home({ featuredPosts, latestPosts }) {
   );
 }
 
-// For server-side data fetching
-export async function fetchData() {
+export async function onBeforeRender() {
   const { posts: featuredPosts } = await fetchGhostData("posts", {
     limit: 3,
     include: "authors,tags",
@@ -136,7 +135,14 @@ export async function fetchData() {
     include: "authors,tags",
   });
 
-  return { featuredPosts, latestPosts };
+  return {
+    pageContext: {
+      pageProps: {
+        featuredPosts,
+        latestPosts,
+      },
+    },
+  };
 }
 
 export default {
