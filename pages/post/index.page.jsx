@@ -1,9 +1,8 @@
 // src/pages/Post.jsx
-import React from "react";
 import { fetchGhostData } from "../../lib/ghost";
 import { formatDate } from "../../lib/utils";
 
-export default function Post({ post }) {
+function Post({ post }) {
   if (!post) {
     return (
       <div className="container mx-auto px-4 py-16 text-center">
@@ -100,3 +99,11 @@ export function onBeforeRender({ routeParams }) {
   // This function is used to determine metadata before render
   return fetchData(routeParams);
 }
+
+export default {
+  Page: Post,
+  documentProps: {
+    title: "Post",
+    description: "This is the post page of the app",
+  },
+};

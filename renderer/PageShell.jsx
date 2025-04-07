@@ -1,104 +1,51 @@
-import React from 'react'
-import PropTypes from 'prop-types'
-import logo from './logo.svg'
-import './PageShell.css'
-import { PageContextProvider } from './usePageContext'
-import { Link } from './Link'
-import { childrenPropType } from './PropTypeValues'
+import { Transition } from "@headlessui/react";
+import PropTypes from "prop-types";
+import React, { useEffect, useState } from "react";
+import Footer from "../components/layout/Footer";
+import Header from "../components/layout/Header";
+import "./PageShell.css";
+import { childrenPropType } from "./PropTypeValues";
+import { PageContextProvider, usePageContext } from "./usePageContext";
 
-export { PageShell }
+export { PageShell };
 
 PageShell.propTypes = {
   pageContext: PropTypes.any,
-  children: childrenPropType
-}
+  children: childrenPropType,
+};
+
 function PageShell({ pageContext, children }) {
+  const { urlPathname } = usePageContext();
+
+  // State for page transitions
+  const [isShowing, setIsShowing] = useState(false);
+
+  useEffect(() => {
+    setIsShowing(true);
+    return () => setIsShowing(false);
+  }, [urlPathname]);
+
   return (
     <React.StrictMode>
       <PageContextProvider pageContext={pageContext}>
-        <Layout>
-          <Sidebar>
-            <Logo />
-            <Link className="navitem" href="/">
-              Home
-            </Link>
-            <Link className="navitem" href="/about">
-              About
-            </Link>
-          </Sidebar>
-          <Content>{children}</Content>
-        </Layout>
+        <div className="flex flex-col min-h-screen">
+          <Header />
+          <main className="flex-grow">
+            <Transition
+              show={isShowing}
+              enter="transition-opacity duration-300"
+              enterFrom="opacity-0"
+              enterTo="opacity-100"
+              leave="transition-opacity duration-300"
+              leaveFrom="opacity-100"
+              leaveTo="opacity-0"
+            >
+              <div>{children}</div>
+            </Transition>
+          </main>
+          <Footer />
+        </div>
       </PageContextProvider>
     </React.StrictMode>
-  )
-}
-
-Layout.propTypes = {
-  children: childrenPropType
-}
-function Layout({ children }) {
-  return (
-    <div
-      style={{
-        display: 'flex',
-        maxWidth: 900,
-        margin: 'auto'
-      }}
-    >
-      {children}
-    </div>
-  )
-}
-
-Sidebar.propTypes = {
-  children: childrenPropType
-}
-function Sidebar({ children }) {
-  return (
-    <div
-      style={{
-        padding: 20,
-        flexShrink: 0,
-        display: 'flex',
-        flexDirection: 'column',
-        alignItems: 'center',
-        lineHeight: '1.8em'
-      }}
-    >
-      {children}
-    </div>
-  )
-}
-
-Content.propTypes = {
-  children: childrenPropType
-}
-function Content({ children }) {
-  return (
-    <div
-      style={{
-        padding: 20,
-        paddingBottom: 50,
-        borderLeft: '2px solid #eee',
-        minHeight: '100vh'
-      }}
-    >
-      {children}
-    </div>
-  )
-}
-
-function Logo() {
-  return (
-    <div
-      style={{
-        marginTop: 20,
-        marginBottom: 10
-      }}
-    >
-      <a href="/">
-        <img src={logo} height={64} width={64} alt="logo" />
-      </a>
-    </div>
-  )
+  );
 }
