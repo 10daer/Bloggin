@@ -15,6 +15,12 @@ export default {
   ],
   build: {
     manifest: true,
+    // Ensure manifest file is generated in proper location
+    rollupOptions: {
+      output: {
+        manualChunks: undefined,
+      },
+    },
     // Generate source maps for better debugging
     sourcemap: true,
     // Customize output directory
