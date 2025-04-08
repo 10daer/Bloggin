@@ -13,4 +13,15 @@ export default {
       },
     }),
   ],
+  build: {
+    manifest: true,
+    // Generate source maps for better debugging
+    sourcemap: true,
+    // Customize output directory
+    outDir: "dist",
+    // Optimize dependencies during build
+    commonjsOptions: {
+      transformMixedEsModules: true,
+    },
+  },
 };
