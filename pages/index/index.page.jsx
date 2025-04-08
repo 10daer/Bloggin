@@ -10,7 +10,6 @@ function Home({ featuredPosts, latestPosts }) {
   });
 
   const displayPosts = featuredPosts || posts || [];
-  console.log(featuredPosts, latestPosts, posts);
 
   return (
     <div className="container mx-auto px-4 py-8">

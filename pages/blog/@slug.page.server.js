@@ -1,9 +1,7 @@
 import { fetchGhostData } from "../../lib/ghost";
 
 export async function onBeforeRender({ routeParams }) {
-  console.log(routeParams);
   const { post } = await fetchData(routeParams);
-  console.log(post);
 
   return {
     pageContext: {
