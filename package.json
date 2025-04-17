@@ -2,10 +2,12 @@
   "scripts": {
     "dev": "npm run server:dev",
     "prod": "npm run lint && npm run build && npm run server:prod",
-    "build": "vite build",
+    "build": "vite build && node copy-manifest.js",
     "server:dev": "node ./server",
     "server:prod": "cross-env NODE_ENV=production node ./server",
-    "lint": "eslint . --max-warnings 0"
+    "lint": "eslint . --max-warnings 0",
+    "postbuild": "cp dist/client/.vite/manifest.json dist/client/manifest.json",
+    "post": "pwd"
   },
   "dependencies": {
     "@headlessui/react": "^2.2.1",

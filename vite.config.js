@@ -8,26 +8,22 @@ export default {
     tailwindcss(),
     ssr({
       prerender: {
-        // Pre-render home page and about page at build time
         routes: ["/", "/about"],
       },
     }),
   ],
   build: {
     manifest: true,
-    // Ensure manifest file is generated in proper location
+    outDir: "dist",
     rollupOptions: {
       output: {
+        // This ensures the manifest file is placed directly in client directory
+        assetFileNames: "assets/[name].[hash].[ext]",
+        chunkFileNames: "[name].[hash].js",
+        entryFileNames: "[name].[hash].js",
         manualChunks: undefined,
       },
     },
-    // Generate source maps for better debugging
-    sourcemap: true,
-    // Customize output directory
-    outDir: "dist",
-    // Optimize dependencies during build
-    commonjsOptions: {
-      transformMixedEsModules: true,
-    },
+    // Don't explicitly set the output directory - let vite-plugin-ssr handle it
   },
 };
